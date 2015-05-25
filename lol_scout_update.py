@@ -1,25 +1,54 @@
+#! /Library/Frameworks/Python.framework/Versions/2.7/bin/python
 import requests
 from random import shuffle
 import time
+from decimal import *
+
+time.sleep(5)
 
 key = 'YOUR-API-KEY'
 
 region = 'na'
 
-def changeTextFile(sum_name, region, champ, sum1, sum2, item1, item2, item3, item4, item5, item6, rune_list):
-	s_rune = ''
-	for i in rune_list:
-		s_rune += ',(%s)[%s]' % (i[0], i[1])
-	text = '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s' % (sum_name, region, champ, sum1, sum2, item1, item2, item3, item4, item5, item6) + s_rune
-	print text
+def init_rune_data():
+	r = requests.get("https://global.api.pvp.net/api/lol/static-data/na/v1.2/rune?runeListData=basic&api_key=" + key)
+	return r.json()
 
-	dropbox_filepath = 'FILE-TO-EDIT'
+def update_rune_list(rune_list):
+	r = requests.get("https://global.api.pvp.net/api/lol/static-data/na/v1.2/rune?runeListData=image&api_key=" + key)
+	j = r.json()
+	for i in range(len(rune_list)):
+		rune_list[i].append(j['data'][str(rune_list[i][1])]['image']['full'])
+	return rune_list
+
+def changeTextFile(sum_name, region, champ, sum1, sum2, item1, item2, item3, item4, item5, item6, rune_list,
+ champion_id, games, wins, losses, kills, deaths, ast):
+	s_rune = ''
+	rune_data = init_rune_data()['data']
+	rune_list = update_rune_list(rune_list)
+	for i in rune_list:
+		rune_id = i[1]
+		s_rune += ',(%s)[%s]#%s!' % (i[0], i[2], rune_data[str(rune_id)]['description'])
+	text = '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s' % (champion_id, games, wins, losses, kills, deaths, ast, sum_name, region, champ, sum1, sum2, item1, item2, item3, item4, item5, item6) + s_rune
+	print "text="+text
+
+	filepath = 'FILE TO WRITE TO'
 
 	f = open(filepath, 'w')
 
 	f.write(text)
 
 	f.close()
+
+def getGamesWinsLossesKDA(j, champion):
+	for i in range(len(j['champions'])):
+		if(j['champions'][i]['id'] == champion):
+			champ_data = j['champions'][i]['stats']
+			getcontext().prec = 2
+			kills = Decimal(champ_data['totalChampionKills']) / Decimal(champ_data['totalSessionsPlayed'])
+			deaths = Decimal(champ_data['totalDeathsPerSession']) / Decimal(champ_data['totalSessionsPlayed'])
+			ast = Decimal(champ_data['totalAssists']) / Decimal(champ_data['totalSessionsPlayed'])
+			return [champ_data['totalSessionsPlayed'], champ_data['totalSessionsWon'], champ_data['totalSessionsLost'], kills, deaths, ast ]
 
 def getMostWinsChampion(j, potential_champions):
 	champion_data = {}
@@ -120,6 +149,13 @@ def meets_requirements(sum_name):
 			if(rs_r.status_code == 200):
 				rs_j = rs_r.json()
 				highest_champ_id = getMostWinsChampion(rs_j, potential_champions)
+				data = getGamesWinsLossesKDA(rs_j, highest_champ_id)
+				games = data[0]
+				wins = data[1]
+				losses = data[2]
+				kills = data[3]
+				deaths = data[4]
+				ast = data[5]
 
 				champion_id = highest_champ_id
 				loc = potential_champions.index(champion_id)
@@ -128,14 +164,12 @@ def meets_requirements(sum_name):
 				summoner_spell2 = summoner_spells[loc][1]
 				rune_page = rune_list[loc]
 
-				try:
-					champ_name = getChampName(champion_id)
-					item_build_name = item_build
-					spell_name1, spell_name2 = getSummonerSpellName(summoner_spell1, summoner_spell2)
-					changeTextFile(sum_name, region, champ_name, spell_name1, spell_name2, item_build_name[0], item_build_name[1], item_build_name[2], item_build_name[3], item_build_name[4], item_build_name[5], rune_page)
-					return True
-				except KeyError as e:
-					print e
+				champ_name = getChampName(champion_id)
+				item_build_name = item_build
+				spell_name1, spell_name2 = getSummonerSpellName(summoner_spell1, summoner_spell2)
+				changeTextFile(sum_name, region, champ_name, summoner_spell1, summoner_spell2, item_build_name[0], item_build_name[1], item_build_name[2], item_build_name[3], item_build_name[4], item_build_name[5], rune_page,
+					champion_id, games, wins, losses, kills, deaths, ast)
+				return True
 			else:
 				print 'cound not connect when getting ' + sum_name + ' ranked stats'
 
