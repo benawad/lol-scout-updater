@@ -105,18 +105,6 @@ def getChampName(id):
 	else:
 		raise KeyError('cound not connect when getting the name of the champion for the id = ' + str(highest_champ_id))
 
-# def getItemNames(item_build):
-# 	item_names = []
-# 	for i in range(len(item_build)):
-# 		item = item_build[i]
-# 		item_r = requests.get('https://global.api.pvp.net/api/lol/static-data/'+region+'/v1.2/item/'+str(item)+'?api_key=' + key)
-# 		if (item_r.status_code == 200):
-# 			item_names.append(item_r.json()['name'])
-# 		else:
-# 			print 'https://global.api.pvp.net/api/lol/static-data/'+region+'/v1.2/item/'+str(item)+'?api_key=' + key
-# 			raise KeyError('could not connect when getting this item id = ' + str(item))
-# 	return item_names
-
 def getSummonerSpellName(summoner_spell1, summoner_spell2):
 	one_r = requests.get('https://global.api.pvp.net/api/lol/static-data/'+region+'/v1.2/summoner-spell/'+str(summoner_spell1)+'?api_key=' + key)
 	two_r = requests.get('https://global.api.pvp.net/api/lol/static-data/'+region+'/v1.2/summoner-spell/'+str(summoner_spell2)+'?api_key=' + key)
@@ -203,29 +191,3 @@ if(chall_r.status_code == 200):
 
 else:
 	print "could not connect when getting challenger players"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
