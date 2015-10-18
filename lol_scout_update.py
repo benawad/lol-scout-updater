@@ -4,11 +4,33 @@ from random import shuffle
 import time
 from decimal import *
 
-time.sleep(5)
+# read config file
+f = file("config.txt", "r")
 
-key = 'YOUR-API-KEY'
+info = f.readlines()
 
 region = 'na'
+# remove \n from end of string
+key = info[0].split('=')[1].rstrip("\n")
+filepath = info[1].split('=')[1].rstrip("\n")
+
+def main():
+    chall_r = requests.get('https://' + region + '.api.pvp.net/api/lol/' + region + '/v2.5/league/challenger?type=RANKED_SOLO_5x5&api_key=' + key)
+
+    if(chall_r.status_code == 200):
+        chall_J = chall_r.json()
+        potential_players  = []
+	for i in range(len(chall_J['entries'])):
+            potential_players.append(chall_J['entries'][i]['playerOrTeamName'])
+
+        shuffle(potential_players)
+
+	for i in potential_players:
+	   if(meets_requirements(i)):
+		break
+	   time.sleep(20)
+    else:
+	print "could not connect when getting challenger players"
 
 def init_rune_data():
 	r = requests.get("https://global.api.pvp.net/api/lol/static-data/na/v1.2/rune?runeListData=basic&api_key=" + key)
@@ -31,8 +53,6 @@ def changeTextFile(sum_name, region, champ, sum1, sum2, item1, item2, item3, ite
 		s_rune += ',(%s)[%s]#%s!' % (i[0], i[2], rune_data[str(rune_id)]['description'])
 	text = '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s' % (champion_id, games, wins, losses, kills, deaths, ast, sum_name, region, champ, sum1, sum2, item1, item2, item3, item4, item5, item6) + s_rune
 	print "text="+text
-
-	filepath = 'FILE TO WRITE TO'
 
 	f = open(filepath, 'w')
 
@@ -169,25 +189,5 @@ def meets_requirements(sum_name):
 
 	return False
 
-
-
-chall_r = requests.get('https://' + region + '.api.pvp.net/api/lol/' + region + '/v2.5/league/challenger?type=RANKED_SOLO_5x5&api_key=' + key)
-
-if(chall_r.status_code == 200):
-
-	chall_J = chall_r.json()
-
-	potential_players  = []
-
-	for i in range(len(chall_J['entries'])):
-		potential_players.append(chall_J['entries'][i]['playerOrTeamName'])
-
-	shuffle(potential_players)
-
-	for i in potential_players:
-		if(meets_requirements(i)):
-			break
-		time.sleep(20)
-
-else:
-	print "could not connect when getting challenger players"
+if __name__ == "__main__":
+    main()

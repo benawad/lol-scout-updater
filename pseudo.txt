@@ -1,0 +1,6 @@
+1. read config file to get api-key and filepath to output to.
+2. get a list of challenger players
+3. pick one at random
+4. get their id
+5. check if player meets my requirements
+6. if the player does send his information to the file else goto step 3
