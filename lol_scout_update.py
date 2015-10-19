@@ -82,18 +82,15 @@ def getMostWinsChampion(j, potential_champions):
 	highest_champ_id = -1
 	highest_wins = -1
 
-        if len(potential_champions)==0:
-           sys.exit() 
-        try:
-	    for i in potential_champions:
-		    if champion_data[i]['totalSessionsWon'] > highest_wins:
-			highest_wins = champion_data[i]['totalSessionsWon']
-			highest_champ_id = i
-        except Exception as e:
-            sys.exit()
+	for i in potential_champions:
+            if i in champion_data:
+		if champion_data[i]['totalSessionsWon'] > highest_wins:
+		    highest_wins = champion_data[i]['totalSessionsWon']
+		    highest_champ_id = i
+            else:
+                sys.exit()
 
 	return highest_champ_id
-
 
 def getSummonerInfo(j_list):
 	potential_champions = []
@@ -153,7 +150,7 @@ def get10MatchIds(j):
         if curr['queue'] == 'RANKED_SOLO_5x5':
             matches.append(curr['matchId'])
             count += 1
-        if count == 5:
+        if count == 30:
             break
     return matches
 
